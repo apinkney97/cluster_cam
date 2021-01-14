@@ -1,0 +1,13 @@
+[Unit]
+Description=Camera Streaming Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/pi/bin/run_camera.sh
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target
+

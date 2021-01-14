@@ -1,0 +1,13 @@
+[Unit]
+Description=Cluster Monitor Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/pi/monitor_server/monitor_server/scroll_info_aiohttp.py
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target
+
