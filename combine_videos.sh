@@ -3,8 +3,17 @@
 # Borrowed from
 # https://ottverse.com/stack-videos-horizontally-vertically-grid-with-ffmpeg
 
+set -eu
+
 # Pass this in as an env var
 youtube_key="${YT_KEY}"
+twitch_key="${TWITCH_KEY}"
+
+twitch_url="rtmp://live-lhr.twitch.tv/app/${twitch_key}"
+youtube_url="rtmp://a.rtmp.youtube.com/live2/${youtube_key}"
+
+# stream_url="${twitch_url}"
+stream_url="${youtube_url}"
 
 ffmpeg \
     -ar 44100 \
@@ -27,5 +36,5 @@ ffmpeg \
     -g 50 \
     -strict experimental \
     -f flv \
-    "rtmp://a.rtmp.youtube.com/live2/${youtube_key}"
+    "${stream_url}"
     
