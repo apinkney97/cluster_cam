@@ -11,7 +11,7 @@ PORT = 8080
 HTTP_TIMEOUT = 1
 SLEEP_SECS = 90
 
-BRIGHTNESS = 1
+BRIGHTNESS = 10
 
 
 def check_health(host: str) -> bool:
@@ -30,10 +30,10 @@ def write_message(message: str, log=True) -> None:
         requests.post(
             f"http://p4:{PORT}/message", data=message.encode(), timeout=HTTP_TIMEOUT
         )
-        print(datetime.datetime.now().isoformat(), message)
+        print(datetime.datetime.utcnow().isoformat()+ "Z", message)
     except requests.exceptions.ConnectionError:
         print(
-            datetime.datetime.now().isoformat(),
+            datetime.datetime.utcnow().isoformat() + "Z",
             "Failed to write message to scroll phat:",
             message,
         )
