@@ -5,13 +5,20 @@ import requests
 import subprocess
 import time
 
+import suntime
+
 HOSTS = ["p1", "p2", "p3", "p4"]
 PORT = 8080
 
 HTTP_TIMEOUT = 1
 SLEEP_SECS = 90
 
+HAS_SCROLLPHAT = False
 BRIGHTNESS = 10
+
+LAT, LONG = 50.9092533, -2.2167916
+
+LIGHTS_ON = None
 
 
 def check_health(host: str) -> bool:
@@ -25,12 +32,18 @@ def check_health(host: str) -> bool:
 
 
 def write_message(message: str, log=True) -> None:
+    print_message = f"{datetime.datetime.utcnow().isoformat()}Z  {message}"
+
+    if not HAS_SCROLLPHAT:
+        print(print_message)
+        return
+
     set_brightness(BRIGHTNESS)
     try:
         requests.post(
             f"http://p4:{PORT}/message", data=message.encode(), timeout=HTTP_TIMEOUT
         )
-        print(datetime.datetime.utcnow().isoformat()+ "Z", message)
+        print(print_message)
     except requests.exceptions.ConnectionError:
         print(
             datetime.datetime.utcnow().isoformat() + "Z",
@@ -50,11 +63,39 @@ def set_brightness(brightness: int) -> bool:
     return True
 
 
+def lights(turn_on: bool) -> bool:
+    global LIGHTS_ON
+    write_message(f"Setting lights {turn_on}")
+    try:
+        requests.post(f"http://p4:{PORT}/lights", json=turn_on, timeout=HTTP_TIMEOUT)
+        LIGHTS_ON = turn_on
+    except requests.exceptions.ConnectionError:
+        return False
+    return True
+
+
 def hard_reset(host: str) -> None:
     # Effectively power-cycles the host
     write_message(f"Resetting {host}")
     subprocess.run(["/sbin/clusterctrl", "off", host])
     subprocess.run(["/sbin/clusterctrl", "on", host])
+
+
+def check_lights():
+
+    sun = suntime.Sun(LAT, LONG)
+    sunrise = sun.get_sunrise_time().timestamp()
+    sunset = sun.get_sunset_time().timestamp()
+
+    now = time.time()
+
+    # LIGHTS_ON is None until we first set it successfully
+
+    if LIGHTS_ON is not True and sunrise <= now <= sunset:
+        lights(True)
+
+    elif LIGHTS_ON is not False and (now < sunrise or now > sunset):
+        lights(False)
 
 
 def main():
@@ -64,7 +105,7 @@ def main():
     ok_last = {host: True for host in HOSTS}
 
     while True:
-        
+
         ok_now = {}
         for host in HOSTS:
             ok_now[host] = check_health(host)
@@ -74,7 +115,7 @@ def main():
 
             # Status was bad on both the last checks :(
             hard_reset(host)
-        
+
         if all(ok for ok in ok_now.values()):
             write_message(f"ALL OK!")
         else:
@@ -84,7 +125,14 @@ def main():
                 write_message(f"OK: {ok}")
             write_message(f"BAD: {not_ok}")
 
-        write_message( subprocess.run(["hostname", "-I"], capture_output=True).stdout.decode().strip().upper())
+        write_message(
+            subprocess.run(["hostname", "-I"], capture_output=True)
+            .stdout.decode()
+            .strip()
+            .upper()
+        )
+
+        check_lights()
         time.sleep(SLEEP_SECS)
         ok_last = ok_now
 

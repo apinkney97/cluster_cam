@@ -10,6 +10,13 @@ try:
 except (ImportError, OSError):
     HAS_SCROLLPHAT = False
 
+try:
+    from RPi import GPIO
+
+    HAS_GPIO = True
+except (ImportError, OSError):
+    HAS_GPIO = False
+
 from aiohttp import web
 
 
@@ -49,7 +56,18 @@ async def handle(request: web.Request) -> web.Response:
 
     brightness = await request.json()
     scrollphat.set_brightness(brightness)
-    
+
+    return web.Response(text="OK")
+
+
+@routes.post("/lights")
+async def handle(request: web.Request) -> web.Response:
+    if not HAS_GPIO:
+        raise web.HTTPNotImplemented(text="No gpio :(")
+
+    lights_on = await request.json()
+    GPIO.output(17, bool(lights_on))
+
     return web.Response(text="OK")
 
 
@@ -61,6 +79,11 @@ async def handle(request: web.Request) -> web.Response:
 async def main() -> None:
     global QUEUE
     QUEUE = asyncio.Queue()
+
+    if HAS_GPIO:
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(17, GPIO.OUT)
+        GPIO.output(17, 0)
 
     app = web.Application()
     app.add_routes(routes)
