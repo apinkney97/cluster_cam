@@ -35,6 +35,4 @@ ffmpeg \
     -ab 128k \
     -g 50 \
     -strict experimental \
-    -f flv \
-    "${stream_url}"
-    
+    -vcodec mpeg4 -f mpegts "udp://192.168.1.241:23000"
