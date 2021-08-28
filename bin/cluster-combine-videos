@@ -16,12 +16,8 @@ youtube_url="rtmp://a.rtmp.youtube.com/live2/${youtube_key}"
 stream_url="${youtube_url}"
 
 ffmpeg \
-    -ar 44100 \
-    -ac 2 \
-    -acodec pcm_s16le \
-    -f s16le \
-    -ac 2 \
-    -i /dev/zero \
+    -f lavfi \
+    -i anullsrc \
     -i tcp://p1:3333/ \
     -i tcp://p2:3333/ \
     -i tcp://p3:3333/ \
@@ -29,10 +25,12 @@ ffmpeg \
     -filter_complex \
         "[1:v][2:v]hstack=inputs=2[top]; \
          [3:v][4:v]hstack=inputs=2[bottom]; \
-         [top][bottom]vstack=inputs=2[v]" \
+         [top][bottom]vstack=inputs=2[v]; \
+         [0:a]acopy[a]" \
     -map "[v]" \
-    -acodec aac \
-    -ab 128k \
+    -map "[a]" \
+    -ac 2 \
     -g 50 \
-    -strict experimental \
-    -vcodec mpeg4 -f mpegts "udp://192.168.1.241:23000"
+    -c:v h264 -preset:v ultrafast \
+    -f flv ${stream_url}
+    # -f mpegts "udp://192.168.1.241:23000"

@@ -4,7 +4,7 @@
 #define OUT_PIN 3
 #define IN_PIN 2
 
-#define BRIGHTNESS 0x40
+#define BRIGHTNESS 0x80
 #define FADE_TIME_MS 100000
 
 CRGB leds[NUM_LEDS];
