@@ -15,7 +15,7 @@ youtube_url="rtmp://a.rtmp.youtube.com/live2/${youtube_key}"
 # stream_url="${twitch_url}"
 stream_url="${youtube_url}"
 
-ffmpeg \
+/usr/bin/ffmpeg \
     -f lavfi \
     -i anullsrc \
     -i tcp://p1:3333/ \
@@ -33,4 +33,3 @@ ffmpeg \
     -g 50 \
     -c:v h264 -preset:v ultrafast \
     -f flv ${stream_url}
-    # -f mpegts "udp://192.168.1.241:23000"
