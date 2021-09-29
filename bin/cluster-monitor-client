@@ -17,6 +17,7 @@ HAS_SCROLLPHAT = False
 BRIGHTNESS = 10
 
 LAT, LONG = 50.9092533, -2.2167916
+LIGHTS_LAG_SECONDS = 15 * 60
 
 LIGHTS_ON = None
 
@@ -84,17 +85,17 @@ def hard_reset(host: str) -> None:
 def check_lights():
 
     sun = suntime.Sun(LAT, LONG)
-    sunrise = sun.get_sunrise_time().timestamp()
-    sunset = sun.get_sunset_time().timestamp()
+    on_time = sun.get_sunrise_time().timestamp() + LIGHTS_LAG_SECONDS 
+    off_time = sun.get_sunset_time().timestamp() - LIGHTS_LAG_SECONDS 
 
     now = time.time()
 
     # LIGHTS_ON is None until we first set it successfully
 
-    if LIGHTS_ON is not True and sunrise <= now <= sunset:
+    if LIGHTS_ON is not True and on_time <= now <= off_time:
         lights(True)
 
-    elif LIGHTS_ON is not False and (now < sunrise or now > sunset):
+    elif LIGHTS_ON is not False and (now < on_time or now > off_time):
         lights(False)
 
 
